@@ -104,13 +104,67 @@ const deployArmTemplate = async (
     {
       /* location, */
       properties: {
+        template,
+        parameters,
+        mode: "Incremental" /* 'Complete' */,
+        debugSetting: {
+          /* permitted values are none,
+           * requestContent, responseContent, or both requestContent and responseContent separated by a
+           * comma */
+          detailLevel: "requestContent,responseContent"
+        }
+      }
+    }
+  );
+
+  // ** full example of params **
+  // const resp = await client.deployments.createOrUpdate(
+  //   resourceGroupName,
+  //   deploymentName,
+  //   {
+  //     location,
+  //     properties: {
+  //       template: {},
+  //       templateLink: {
+  //         uri: ""
+  //       },
+  //       parameters: {},
+  //       parametersLink: {
+  //         uri: ""
+  //       },
+  //       mode: "Incremental" /* 'Complete' */,
+  //       debugSetting: {
+  //         /* permitted values are none,
+  //          * requestContent, responseContent, or both requestContent and responseContent separated by a
+  //          * comma */
+  //         detailLevel: "requestContent,responseContent"
+  //       }
+  //     }
+  //   }
+  // );
+
+  return resp;
+};
+
+const deployRemoteArmTemplate = async (
+  resourceGroupName,
+  deploymentName,
+  template,
+  parameters,
+  location = "eastus"
+) => {
+  const client = await getDefaultResourceManagementClient();
+  const resp = await client.deployments.createOrUpdate(
+    resourceGroupName,
+    deploymentName,
+    {
+      /* location, */
+      properties: {
         templateLink: {
-          /* uri: `"${template}"` */
-          uri: `https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-storage-account-create/azuredeploy.json`
+          uri: template
         },
         parametersLink: {
-          /* uri: `"${parameters}"` */
-          uri: `https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-storage-account-create/azuredeploy.parameters.json`
+          uri: parameters
         },
         mode: "Incremental" /* 'Complete' */,
         debugSetting: {
@@ -154,20 +208,17 @@ const deployArmTemplate = async (
 
 const getArmTemplateFromDirectory = directoryPath => {
   return {
-    template: url.pathToFileURL(`${directoryPath}/azuredeploy.json`),
-    parameters: url.pathToFileURL(
-      `${directoryPath}/azuredeploy.parameters.json`
+    template: JSON.parse(
+      fs.readFileSync(`${directoryPath}/azuredeploy.json`, {
+        encoding: "utf8"
+      })
+    ),
+    parameters: JSON.parse(
+      fs.readFileSync(`${directoryPath}/azuredeploy.parameters.json`, {
+        encoding: "utf8"
+      })
     )
   };
-  // return {
-  //   template: fs.readFileSync(`${directoryPath}/azuredeploy.json`, {
-  //     encoding: "utf8"
-  //   }),
-  //   parameters: fs.readFileSync(
-  //     `${directoryPath}/azuredeploy.parameters.json`,
-  //     { encoding: "utf8" }
-  //   )
-  // };
 };
 
 const deployArmTemplateExample = async () => {
@@ -177,6 +228,8 @@ const deployArmTemplateExample = async () => {
     "101-storage-account-create"
   );
   const armTemplate = getArmTemplateFromDirectory(directoryPath);
+  // log(armTemplate);
+  // return;
   const resourceGroupName = generateRandomId("resource-group-");
   await createResourceGroup(resourceGroupName);
   const deploymentName = generateRandomId(`${resourceGroupName}-deployment-`);
@@ -189,10 +242,24 @@ const deployArmTemplateExample = async () => {
   log(resp);
 };
 
+const deployRemoteArmTemplateExample = async () => {
+  const resourceGroupName = generateRandomId("resource-group-");
+  await createResourceGroup(resourceGroupName);
+  const deploymentName = generateRandomId(`${resourceGroupName}-deployment-`);
+  const resp = await deployRemoteArmTemplate(
+    resourceGroupName,
+    deploymentName,
+    `https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-storage-account-create/azuredeploy.json`,
+    `https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-storage-account-create/azuredeploy.parameters.json`
+  );
+  log(resp);
+};
+
 const run = async () => {
   await setCredentials();
   // await createThenDeleteResourceGroupExample();
   await deployArmTemplateExample();
+  //await deployRemoteArmTemplateExample();
 };
 
 run();
