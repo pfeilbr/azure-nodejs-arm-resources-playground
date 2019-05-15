@@ -1,0 +1,19 @@
+{
+  "name": "azure-arm-resources-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "azure-arm-resource": "^7.3.0",
+    "dotenv": "^8.0.0",
+    "lodash": "^4.17.11",
+    "ms-rest-azure": "^2.6.0"
+  }
+}
